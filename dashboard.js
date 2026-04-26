@@ -70,7 +70,8 @@
     bindDashboardEvents();
     fillProfileForm();
     resetProductForm();
-    syncDashboard();
+    syncDashboard(false);
+    loadLatestStore();
 
     if (isLoggedIn()) {
       showDashboard();
@@ -621,8 +622,8 @@
       productForm.elements.sizeXXL.value = normalizedSizes.XXL || 0;
     }
 
-    function syncDashboard() {
-      if (!storeTools.saveStore(store)) {
+    function syncDashboard(shouldSave) {
+      if (shouldSave !== false && !storeTools.saveStore(store)) {
         showToast("Data gagal disimpan. Kurangi ukuran/jumlah gambar produk.");
         return false;
       }
@@ -631,6 +632,28 @@
       renderProfileSummary();
       renderAdminProducts();
       return true;
+    }
+
+    function loadLatestStore() {
+      if (!storeTools.loadCloudStore) {
+        return false;
+      }
+
+      return storeTools.loadCloudStore(
+        function (remoteStore) {
+          store = remoteStore;
+          pendingLogo = store.profile.logo || "";
+          pendingHeroImage = store.profile.heroImage || "assets/kaos-collection.png";
+          fillProfileForm();
+          resetProductForm();
+          hideProductForm();
+          syncDashboard(false);
+          showToast("Data cloud berhasil dimuat.");
+        },
+        function () {
+          showToast("Data cloud belum bisa dimuat. Dashboard memakai data lokal.");
+        }
+      );
     }
 
     function getProductById(productId) {

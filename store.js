@@ -210,13 +210,141 @@ function loadStore() {
   }
 }
 
+function getCloudConfig() {
+  return window.StoreCloudConfig || {};
+}
+
+function isCloudStoreEnabled() {
+  var config = getCloudConfig();
+
+  return Boolean(config.supabaseUrl && config.supabaseAnonKey);
+}
+
+function normalizeStore(store) {
+  var products = Array.isArray(store.products)
+    ? store.products.map(migrateProduct)
+    : cloneDefaultStore().products;
+
+  return {
+    profile: mergeProfile(store.profile),
+    products: products,
+  };
+}
+
 function saveStore(store) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    saveCloudStore(store);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function saveLocalStore(store) {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
     return true;
   } catch (error) {
     return false;
   }
+}
+
+function getSupabaseHeaders(config) {
+  return {
+    apikey: config.supabaseAnonKey,
+    Authorization: "Bearer " + config.supabaseAnonKey,
+    "Content-Type": "application/json",
+    Prefer: "resolution=merge-duplicates",
+  };
+}
+
+function getSupabaseBaseUrl(config) {
+  return config.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + encodeURIComponent(config.table || "site_store");
+}
+
+function loadCloudStore(onSuccess, onError) {
+  var config = getCloudConfig();
+  var url;
+
+  if (!isCloudStoreEnabled() || typeof fetch !== "function") {
+    return false;
+  }
+
+  url =
+    getSupabaseBaseUrl(config) +
+    "?id=eq." +
+    encodeURIComponent(config.rowId || "threadline") +
+    "&select=data";
+
+  fetch(url, {
+    headers: getSupabaseHeaders(config),
+  })
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error("Cloud store tidak bisa dibaca.");
+      }
+
+      return response.json();
+    })
+    .then(function (rows) {
+      var remoteStore = rows && rows[0] && rows[0].data;
+
+      if (!remoteStore) {
+        return;
+      }
+
+      remoteStore = normalizeStore(remoteStore);
+      saveLocalStore(remoteStore);
+
+      if (typeof onSuccess === "function") {
+        onSuccess(remoteStore);
+      }
+    })
+    .catch(function (error) {
+      if (typeof onError === "function") {
+        onError(error);
+      }
+    });
+
+  return true;
+}
+
+function saveCloudStore(store, onSuccess, onError) {
+  var config = getCloudConfig();
+  var payload;
+
+  if (!isCloudStoreEnabled() || typeof fetch !== "function") {
+    return false;
+  }
+
+  payload = {
+    id: config.rowId || "threadline",
+    data: normalizeStore(store),
+    updated_at: new Date().toISOString(),
+  };
+
+  fetch(getSupabaseBaseUrl(config) + "?on_conflict=id", {
+    method: "POST",
+    headers: getSupabaseHeaders(config),
+    body: JSON.stringify(payload),
+  })
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error("Cloud store tidak bisa disimpan.");
+      }
+
+      if (typeof onSuccess === "function") {
+        onSuccess();
+      }
+    })
+    .catch(function (error) {
+      if (typeof onError === "function") {
+        onError(error);
+      }
+    });
+
+  return true;
 }
 
 function escapeHTML(value) {
@@ -234,6 +362,9 @@ window.StoreData = {
   createProductId: createProductId,
   escapeHTML: escapeHTML,
   loadStore: loadStore,
+  loadCloudStore: loadCloudStore,
   normalizeSizes: normalizeSizes,
+  saveCloudStore: saveCloudStore,
+  saveLocalStore: saveLocalStore,
   saveStore: saveStore,
 };

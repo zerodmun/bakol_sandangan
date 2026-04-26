@@ -35,16 +35,17 @@
     var showAllComments = false;
     var index;
 
-    storeTools.saveStore(store);
+    storeTools.saveLocalStore(store);
     applyProfile();
     renderProducts(activeCategory);
+    loadLatestStore();
 
     window.addEventListener("storage", function () {
       refreshStore();
     });
 
     window.addEventListener("focus", function () {
-      refreshStore();
+      loadLatestStore() || refreshStore();
     });
 
     for (index = 0; index < filterButtons.length; index += 1) {
@@ -178,6 +179,28 @@
           closeProductDetail();
         }
       }
+    }
+
+    function loadLatestStore() {
+      if (!storeTools.loadCloudStore) {
+        return false;
+      }
+
+      return storeTools.loadCloudStore(function (remoteStore) {
+        store = remoteStore;
+        applyProfile();
+        renderProducts(activeCategory);
+
+        if (selectedProduct) {
+          selectedProduct = getProductById(selectedProduct.id);
+
+          if (selectedProduct) {
+            showProductDetail(selectedProduct);
+          } else {
+            closeProductDetail();
+          }
+        }
+      });
     }
 
     function closestButton(element) {
