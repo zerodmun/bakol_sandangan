@@ -11,8 +11,8 @@ Website ini tetap bisa jalan di GitHub Pages. Agar edit dari dashboard ikut beru
 ```js
 window.StoreCloudConfig = {
   provider: "supabase",
-  supabaseUrl: "https://qhaxhpafdmswcltdnwqs.supabase.co",
-  supabaseAnonKey: "sb_publishable_0qfhQjxRQ6LgGbJXWPUYlg_IVeb_zkP",
+  supabaseUrl: "https://PROJECT_ID.supabase.co",
+  supabaseAnonKey: "ANON_PUBLIC_KEY",
   table: "site_store",
   rowId: "threadline",
 };
