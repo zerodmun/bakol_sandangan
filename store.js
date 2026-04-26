@@ -231,10 +231,10 @@ function normalizeStore(store) {
   };
 }
 
-function saveStore(store) {
+function saveStore(store, onCloudSuccess, onCloudError) {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
-    saveCloudStore(store);
+    saveCloudStore(store, onCloudSuccess, onCloudError);
     return true;
   } catch (error) {
     return false;
@@ -263,6 +263,17 @@ function getSupabaseBaseUrl(config) {
   return config.supabaseUrl.replace(/\/$/, "") + "/rest/v1/" + encodeURIComponent(config.table || "site_store");
 }
 
+function readSupabaseError(response, fallbackMessage) {
+  return response
+    .json()
+    .then(function (body) {
+      return new Error(body.message || body.hint || fallbackMessage);
+    })
+    .catch(function () {
+      return new Error(fallbackMessage);
+    });
+}
+
 function loadCloudStore(onSuccess, onError) {
   var config = getCloudConfig();
   var url;
@@ -282,7 +293,9 @@ function loadCloudStore(onSuccess, onError) {
   })
     .then(function (response) {
       if (!response.ok) {
-        throw new Error("Cloud store tidak bisa dibaca.");
+        return readSupabaseError(response, "Cloud store tidak bisa dibaca.").then(function (error) {
+          throw error;
+        });
       }
 
       return response.json();
@@ -331,7 +344,9 @@ function saveCloudStore(store, onSuccess, onError) {
   })
     .then(function (response) {
       if (!response.ok) {
-        throw new Error("Cloud store tidak bisa disimpan.");
+        return readSupabaseError(response, "Cloud store tidak bisa disimpan.").then(function (error) {
+          throw error;
+        });
       }
 
       if (typeof onSuccess === "function") {

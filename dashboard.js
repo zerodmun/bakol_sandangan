@@ -623,9 +623,19 @@
     }
 
     function syncDashboard(shouldSave) {
-      if (shouldSave !== false && !storeTools.saveStore(store)) {
-        showToast("Data gagal disimpan. Kurangi ukuran/jumlah gambar produk.");
-        return false;
+      if (shouldSave !== false) {
+        if (
+          !storeTools.saveStore(
+            store,
+            null,
+            function (error) {
+              showToast("Data cloud gagal disimpan: " + error.message);
+            }
+          )
+        ) {
+          showToast("Data gagal disimpan. Kurangi ukuran/jumlah gambar produk.");
+          return false;
+        }
       }
 
       updateDashboardBrand();
@@ -650,8 +660,8 @@
           syncDashboard(false);
           showToast("Data cloud berhasil dimuat.");
         },
-        function () {
-          showToast("Data cloud belum bisa dimuat. Dashboard memakai data lokal.");
+        function (error) {
+          showToast("Data cloud belum bisa dimuat: " + error.message);
         }
       );
     }
