@@ -63,13 +63,13 @@
 
 .password-toggle {
   position: absolute;
-  top: 4px;
+  top: 50%;
   right: 8px;
   width: 38px;
   height: 38px;
   display: grid;
   place-items: center;
-  align-content: center;
+  transform: translateY(-50%);
   border: 0;
   border-radius: 50%;
   background: transparent;
@@ -85,8 +85,6 @@
   height: 13px;
   position: relative;
   display: block;
-  margin-left: 9px;
-  margin-top: 9px;
   border: 2px solid var(--ink);
   border-radius: 999px 999px 850px 850px;
 }
@@ -178,9 +176,10 @@
 .menu-trigger {
   width: 34px;
   min-height: 34px;
-  display: grid;
-  justify-items: center;
-  align-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
   gap: 5px;
   border: 0;
   background: transparent;
@@ -191,8 +190,6 @@
   width: 18px;
   height: 2px;
   display: block;
-  margin-left: 8px;
-  transform: translateY(-1px);
   background: var(--ink);
 }
 
@@ -861,7 +858,97 @@
   .dashboard-hero .btn,
   .product-toolbar .btn,
   .form-actions .btn,
-  .logo-editor .btn {
+  .logo-editor .btn,
+  .hero-image-editor .btn,
+  .product-image-editor .btn {
     width: 100%;
+  }
+
+  .login-screen {
+    align-items: start;
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 20px;
+  }
+
+  .toast-container {
+    top: 12px;
+    right: 12px;
+    width: calc(100% - 24px);
+  }
+
+  .owner-dropdown {
+    top: 42px;
+    left: 0;
+  }
+
+  .dashboard-hero {
+    gap: 16px;
+  }
+
+  .dashboard-hero .btn,
+  .product-toolbar .btn,
+  .form-actions .btn,
+  .logo-editor .btn,
+  .hero-image-editor .btn,
+  .product-image-editor .btn,
+  .mini-btn {
+    min-height: 44px;
+  }
+
+  .admin-product-item {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .color-dot {
+    display: none;
+  }
+
+  .admin-product-thumb {
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-comment-item {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-shell {
+    width: min(100% - 20px, 1120px);
+    padding-top: 22px;
+  }
+
+  .dashboard-title {
+    font-size: 0.92rem;
+  }
+
+  .dashboard-nav {
+    gap: 8px;
+  }
+
+  .product-toolbar-actions,
+  .form-actions {
+    gap: 8px;
+  }
+
+  .admin-panel,
+  .login-card,
+  .confirm-card {
+    padding: 16px;
+  }
+
+  .hero-image-preview {
+    min-height: 170px;
   }
 }
