@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Threadline Studio - Kaos Daily Wear</title>
+    <link rel="stylesheet" href="style.css?v=32" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav">
+        <a class="brand" href="#home" aria-label="Threadline Studio home">
+          <span class="brand-mark">TS</span>
+          <span>Threadline Studio</span>
+        </a>
+
+        <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-links" id="nav-links">
+          <a href="#produk">Produk</a>
+          <a href="#keunggulan">Keunggulan</a>
+          <a href="#kontak">Kontak</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="site-toast is-hidden" id="site-toast" role="status" aria-live="polite"></div>
+
+      <section class="hero" id="home">
+        <div class="hero-copy">
+          <p class="eyebrow" data-store="eyebrow">Kaos lokal untuk daily wear</p>
+          <h1 data-store="headline">Kaos minimalis yang nyaman dipakai dari kerja sampai akhir pekan.</h1>
+          <p class="hero-text" data-store="description">
+            Koleksi kaos premium dengan bahan adem, potongan rapi, dan warna yang mudah
+            dipadukan. Pesan cepat lewat WhatsApp atau checkout langsung via Shopee.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#produk">Lihat Produk</a>
+            <a class="btn btn-secondary" href="#kontak">
+              Cara Beli
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-media" aria-label="Foto koleksi kaos Threadline Studio">
+          <img id="hero-image" src="assets/kaos-collection.png" alt="Koleksi kaos polos warna hitam putih hijau dan terracotta" />
+          <div class="stock-badge">
+            <strong>Ready Stock</strong>
+            <span>S-XXL</span>
+          </div>
+        </div>
+      </section>
+<!--
+      <section class="stats" aria-label="Ringkasan toko">
+        <article>
+          <strong>4.9/5</strong>
+          <span>Rating pembeli</span>
+        </article>
+        <article>
+          <strong>24 Jam</strong>
+          <span>Respon order</span>
+        </article>
+        <article>
+          <strong>100%</strong>
+          <span>Katun combed</span>
+        </article>
+      </section>
+-->
+      <section class="section" id="produk">
+        <div class="section-heading">
+          <p class="eyebrow">Katalog</p>
+          <h2 data-store="catalogTitle">Pilih warna favoritmu</h2>
+          <p data-store="catalogText">Setiap produk bisa dipesan lewat WhatsApp atau Shopee sesuai preferensi pembeli.</p>
+        </div>
+
+        <div class="toolbar" aria-label="Filter produk">
+          <button class="filter-btn is-active" type="button" data-filter="all">Semua</button>
+          <button class="filter-btn" type="button" data-filter="basic">Basic</button>
+          <button class="filter-btn" type="button" data-filter="earth">Earth Tone</button>
+          <button class="filter-btn" type="button" data-filter="limited">Limited</button>
+        </div>
+
+        <div class="product-grid" id="product-grid"></div>
+      </section>
+
+      <section class="product-detail is-hidden" id="product-detail" aria-live="polite" role="dialog" aria-modal="true" aria-labelledby="detail-name">
+        <div class="detail-shell">
+          <button class="mini-back" type="button" id="back-to-products" aria-label="Tutup detail produk">×</button>
+          <div class="detail-layout">
+            <div class="detail-gallery">
+              <button class="slide-btn" type="button" id="prev-image" aria-label="Gambar sebelumnya">‹</button>
+              <img id="detail-image" src="assets/kaos-collection.png" alt="Detail produk" />
+              <button class="slide-btn" type="button" id="next-image" aria-label="Gambar berikutnya">›</button>
+              <div class="detail-thumbs" id="detail-thumbs"></div>
+            </div>
+            <article class="detail-copy">
+              <p class="eyebrow" id="detail-category">Produk</p>
+              <h2 id="detail-name">Nama produk</h2>
+              <strong class="detail-price" id="detail-price">Rp0</strong>
+              <span class="status-badge" id="detail-status">Ready</span>
+              <div class="size-stock" id="detail-sizes" aria-label="Stok ukuran produk"></div>
+              <p id="detail-description"></p>
+              <div class="comment-box">
+                <h3 id="comment-title">Komentar Pembeli (0)</h3>
+                <form class="comment-form" id="comment-form">
+                  <label>
+                    Nama
+                    <input type="text" name="commentName" placeholder="Nama kamu" required />
+                  </label>
+                  <label>
+                    Komentar
+                    <textarea name="commentText" id="comment-text" rows="3" maxlength="180" placeholder="Tulis komentar produk" required></textarea>
+                  </label>
+                  <span class="comment-counter" id="comment-counter">0/180</span>
+                  <button class="btn btn-secondary" type="submit">Kirim Komentar</button>
+                </form>
+                <div class="comment-list" id="comment-list"></div>
+                <button class="comment-toggle is-hidden" type="button" id="comment-toggle">Lihat semua komentar</button>
+              </div>
+            </article>
+          </div>
+          <div class="detail-actions">
+            <a class="btn btn-primary" id="detail-whatsapp" href="#" target="_blank" rel="noreferrer">Pesan via WhatsApp</a>
+            <a class="btn btn-secondary" id="detail-shopee" href="#" target="_blank" rel="noreferrer">Pesan via Shopee</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-band" id="keunggulan">
+        <div class="section-heading">
+          <p class="eyebrow">Kenapa pilih kami</p>
+          <h2>Detail kecil yang bikin kaos lebih awet dipakai.</h2>
+        </div>
+
+        <div class="features">
+          <article>
+            <span class="feature-icon">01</span>
+            <h3>Bahan adem</h3>
+            <p>Katun combed 24s yang halus, menyerap keringat, dan tetap nyaman untuk cuaca tropis.</p>
+          </article>
+          <article>
+            <span class="feature-icon">02</span>
+            <h3>Potongan rapi</h3>
+            <p>Cutting regular fit dengan jahitan leher yang stabil agar bentuk kaos tidak cepat melar.</p>
+          </article>
+          <article>
+            <span class="feature-icon">03</span>
+            <h3>Order fleksibel</h3>
+            <p>Pembeli bisa konsultasi ukuran via WhatsApp atau langsung transaksi aman lewat Shopee.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="contact" id="kontak">
+        <div>
+          <p class="eyebrow">Kontak</p>
+          <h2>Siap checkout kaos baru?</h2>
+          <p>Pilih detail produk di katalog, lihat gambar dan ulasannya, lalu pesan lewat WhatsApp atau Shopee.</p>
+        </div>
+        <a class="btn btn-primary" href="#produk">Lihat Katalog</a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 <span data-store="name">Threadline Studio</span>. Portfolio website by your name.</p>
+    </footer>
+
+    <script src="store.js?v=33"></script>
+    <script src="script.js?v=33"></script>
+  </body>
+</html>

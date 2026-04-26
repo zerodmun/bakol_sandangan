@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Toko</title>
+    <link rel="stylesheet" href="style.css?v=29" />
+    <link rel="stylesheet" href="dashboard.css?v=29" />
+  </head>
+  <body>
+    <section class="login-screen" id="login-screen">
+      <form class="login-card" id="login-form">
+        <p class="eyebrow">Login Pemilik</p>
+        <h1>Masuk Dashboard</h1>
+        <p>Gunakan akun admin untuk mengubah profile toko dan data produk.</p>
+        <label>
+          Username
+          <input type="text" name="username" autocomplete="username" required />
+        </label>
+        <label>
+          Password
+          <span class="password-field">
+            <input type="password" name="password" id="password-input" autocomplete="current-password" required />
+            <button class="password-toggle" type="button" id="password-toggle" aria-label="Lihat password">
+              <span class="eye-icon" aria-hidden="true"></span>
+            </button>
+          </span>
+        </label>
+        <p class="login-error" id="login-error" role="alert"></p>
+        <button class="btn btn-primary" type="submit">Login</button>
+      </form>
+    </section>
+
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <header class="site-header is-hidden" id="dashboard-header">
+      <nav class="nav">
+        <div class="owner-menu">
+          <button class="menu-trigger" type="button" id="owner-menu-button" aria-label="Buka menu akun" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div class="owner-dropdown is-hidden" id="owner-menu">
+            <button type="button" id="logout-button">Logout</button>
+          </div>
+        </div>
+        <div class="dashboard-title">Dashboard Toko</div>
+        <div class="nav-links dashboard-nav">
+          <button class="tab-btn is-active" type="button" data-tab="profile">Profile</button>
+          <button class="tab-btn" type="button" data-tab="products">Produk</button>
+        </div>
+      </nav>
+    </header>
+
+    <div class="confirm-dialog is-hidden" id="logout-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+      <div class="confirm-card">
+        <h2 id="logout-title">Yakin ingin logout?</h2>
+        <p>Sesi dashboard akan ditutup dan kamu perlu login lagi untuk mengubah data toko.</p>
+        <div class="form-actions">
+          <button class="btn btn-secondary" type="button" id="cancel-logout">Urungkan</button>
+          <button class="btn btn-primary" type="button" id="confirm-logout">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <main class="dashboard-shell is-hidden" id="dashboard-app">
+      <section class="dashboard-hero">
+        <div>
+          <p class="eyebrow">Pemilik Toko</p>
+          <h1>Dashboard pengaturan website.</h1>
+          <p>
+            Kelola profile toko dan katalog produk. Data tersimpan di browser dengan localStorage
+            untuk kebutuhan portfolio atau demo statis.
+          </p>
+        </div>
+        <button class="btn btn-secondary" type="button" id="reset-store">Reset Data</button>
+      </section>
+
+      <section class="tab-panel is-active" id="profile-panel">
+        <div class="admin-panel profile-summary" id="profile-summary">
+          <div class="panel-title">
+            <h2>Profile Saat Ini</h2>
+            <span>Data inilah yang sedang ditampilkan di website pembeli.</span>
+          </div>
+          <div class="summary-grid" id="profile-summary-list"></div>
+          <button class="btn btn-primary" type="button" id="edit-profile">Edit Profile</button>
+        </div>
+
+        <form class="admin-panel profile-form is-hidden" id="profile-form">
+          <div class="panel-title">
+            <h2>Edit Profile</h2>
+            <span>Edit nama toko, judul website, teks tampilan, logo, dan gambar utama.</span>
+          </div>
+
+          <div class="logo-editor">
+            <div class="logo-preview" id="logo-preview">TS</div>
+            <label>
+              Ganti logo
+              <input type="file" name="logoFile" accept="image/*" />
+            </label>
+            <button class="btn btn-secondary" type="button" id="remove-logo">Hapus Logo</button>
+          </div>
+
+          <div class="hero-image-editor">
+            <div class="hero-image-preview" id="hero-image-preview">Preview gambar utama</div>
+            <label>
+              Ganti gambar halaman utama
+              <input type="file" name="heroImageFile" accept="image/*" />
+            </label>
+            <button class="btn btn-secondary" type="button" id="remove-hero-image">Pakai Gambar Default</button>
+          </div>
+
+          <label>
+            Nama toko
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            Judul website
+            <input type="text" name="title" required />
+          </label>
+          <label>
+            Inisial logo
+            <input type="text" name="initials" maxlength="3" required />
+          </label>
+          <label>
+            Eyebrow hero
+            <input type="text" name="eyebrow" required />
+          </label>
+          <label>
+            Judul hero
+            <textarea name="headline" rows="3" required></textarea>
+          </label>
+          <label>
+            Deskripsi hero
+            <textarea name="description" rows="4" required></textarea>
+          </label>
+          <label>
+            Judul katalog
+            <input type="text" name="catalogTitle" required />
+          </label>
+          <label>
+            Deskripsi katalog
+            <textarea name="catalogText" rows="3" required></textarea>
+          </label>
+
+          <div class="form-actions span-full">
+            <button class="btn btn-primary" type="submit">Simpan Profile</button>
+            <button class="btn btn-secondary" type="button" id="cancel-profile-edit">Batal</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="tab-panel" id="products-panel">
+        <div class="product-toolbar">
+          <div>
+            <p class="eyebrow">Produk</p>
+            <h2>Produk yang tampil di website</h2>
+          </div>
+          <div class="product-toolbar-actions">
+            <label class="search-box">
+              <span>Cari produk</span>
+              <input type="search" id="product-search" placeholder="Cari nama, kategori, harga..." />
+            </label>
+            <button class="btn btn-primary" type="button" id="add-product">Tambah Produk</button>
+          </div>
+        </div>
+
+        <div class="product-admin-layout">
+          <form class="admin-panel product-form is-hidden" id="product-form">
+            <div class="panel-title">
+              <h2 id="product-form-title">Tambah Produk</h2>
+              <span>Tambah produk baru atau edit produk yang sudah ada.</span>
+            </div>
+            <input type="hidden" name="id" />
+            <label>
+              Nama produk
+              <input type="text" name="name" required />
+            </label>
+            <label>
+              Harga
+              <input type="text" name="price" placeholder="Rp129.000" required />
+            </label>
+            <label>
+              Kategori
+              <select name="category" required>
+                <option value="basic">Basic</option>
+                <option value="earth">Earth Tone</option>
+                <option value="limited">Limited</option>
+              </select>
+            </label>
+            <label>
+              Status stok
+              <select name="status" required>
+                <option value="ready">Ready Stock</option>
+                <option value="preorder">Pre-order 3-7 hari</option>
+                <option value="soldout">Stok Habis</option>
+              </select>
+            </label>
+            <fieldset class="size-stock-editor">
+              <legend>Stok per ukuran</legend>
+              <label>
+                S
+                <input type="number" name="sizeS" min="0" value="0" />
+              </label>
+              <label>
+                M
+                <input type="number" name="sizeM" min="0" value="0" />
+              </label>
+              <label>
+                L
+                <input type="number" name="sizeL" min="0" value="0" />
+              </label>
+              <label>
+                XL
+                <input type="number" name="sizeXL" min="0" value="0" />
+              </label>
+              <label>
+                XXL
+                <input type="number" name="sizeXXL" min="0" value="0" />
+              </label>
+            </fieldset>
+            <label>
+              Deskripsi
+              <textarea name="description" rows="3" required></textarea>
+            </label>
+            <div class="product-image-editor">
+              <div class="image-list" id="product-image-list"></div>
+              <button class="btn btn-secondary" type="button" id="add-product-image">Tambah Gambar</button>
+              <span class="image-limit">Maksimal 7 gambar produk. Rekomendasi detail: 1080x1350.</span>
+              <label>
+                Gambar untuk card produk
+                <select name="cardImageIndex" id="card-image-index"></select>
+              </label>
+              <div class="card-image-preview" id="card-image-preview">Preview card</div>
+            </div>
+            <label>
+              Link WhatsApp produk
+              <input type="url" name="whatsappUrl" placeholder="https://wa.me/628xxxx?text=..." required />
+            </label>
+            <label>
+              Link Shopee produk
+              <input type="url" name="shopeeUrl" placeholder="https://shopee.co.id/produk-kamu" required />
+            </label>
+            <label>
+              Warna kaos
+              <input type="color" name="shirt" value="#171717" required />
+            </label>
+            <label>
+              Warna teks logo
+              <input type="color" name="text" value="#ffffff" required />
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Simpan Produk</button>
+              <button class="btn btn-secondary" type="button" id="cancel-edit">Batal Edit</button>
+            </div>
+          </form>
+
+          <div class="admin-panel product-table-panel">
+            <div class="panel-title">
+              <h2>Daftar Produk</h2>
+              <span id="product-count">0 produk</span>
+            </div>
+            <div class="product-table" id="admin-product-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="store.js?v=29"></script>
+    <script src="dashboard.js?v=29"></script>
+  </body>
+</html>
