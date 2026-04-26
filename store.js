@@ -13,6 +13,11 @@ var defaultStore = {
       "Koleksi kaos premium dengan bahan adem, potongan rapi, dan warna yang mudah dipadukan. Pesan cepat lewat WhatsApp atau checkout langsung via Shopee.",
     catalogTitle: "Pilih warna favoritmu",
     catalogText: "Setiap produk bisa dipesan lewat WhatsApp atau Shopee sesuai preferensi pembeli.",
+    phoneNumber: "6281234567890",
+    promoEnabled: true,
+    promoText: "Gratis konsultasi ukuran sebelum checkout.",
+    faqTitle: "Cara order",
+    faqText: "Pilih produk, cek ukuran, lalu pesan lewat WhatsApp atau Shopee. Tim kami akan bantu konfirmasi stok dan estimasi pengiriman.",
   },
   products: [
     {
@@ -28,6 +33,8 @@ var defaultStore = {
       images: ["assets/kaos-collection.png"],
       reviews: "Bahan adem, jahitan rapi, dan warna mudah dipadukan untuk outfit harian.",
       comments: [],
+      isPublished: true,
+      createdAt: "2026-01-01T09:00:00.000Z",
       whatsappUrl:
         "https://wa.me/6281234567890?text=Halo%2C%20saya%20mau%20pesan%20Essential%20Black%20Tee.",
       shopeeUrl: "https://shopee.co.id/",
@@ -46,6 +53,8 @@ var defaultStore = {
       images: ["assets/kaos-collection.png"],
       reviews: "Warna putihnya bersih, nyaman dipakai, dan cocok untuk layering.",
       comments: [],
+      isPublished: true,
+      createdAt: "2026-01-02T09:00:00.000Z",
       whatsappUrl:
         "https://wa.me/6281234567890?text=Halo%2C%20saya%20mau%20pesan%20Classic%20White%20Tee.",
       shopeeUrl: "https://shopee.co.id/",
@@ -64,6 +73,8 @@ var defaultStore = {
       images: ["assets/kaos-collection.png"],
       reviews: "Tone sage terlihat kalem dan tetap stylish untuk aktivitas santai.",
       comments: [],
+      isPublished: true,
+      createdAt: "2026-01-03T09:00:00.000Z",
       whatsappUrl:
         "https://wa.me/6281234567890?text=Halo%2C%20saya%20mau%20pesan%20Sage%20Weekend%20Tee.",
       shopeeUrl: "https://shopee.co.id/",
@@ -82,6 +93,8 @@ var defaultStore = {
       images: ["assets/kaos-collection.png"],
       reviews: "Warna terracotta memberi tampilan hangat dan terasa berbeda dari kaos basic.",
       comments: [],
+      isPublished: true,
+      createdAt: "2026-01-04T09:00:00.000Z",
       whatsappUrl:
         "https://wa.me/6281234567890?text=Halo%2C%20saya%20mau%20pesan%20Terracotta%20Drop%20Tee.",
       shopeeUrl: "https://shopee.co.id/",
@@ -129,6 +142,25 @@ function normalizeSizes(sizes) {
   return defaults;
 }
 
+function parsePrice(price) {
+  var digits = String(price || "").replace(/[^\d]/g, "");
+
+  return Number(digits) || 0;
+}
+
+function getProductStock(product) {
+  var sizes = normalizeSizes(product.sizes);
+  var labels = ["S", "M", "L", "XL", "XXL"];
+  var total = 0;
+  var index;
+
+  for (index = 0; index < labels.length; index += 1) {
+    total += Number(sizes[labels[index]]) || 0;
+  }
+
+  return total;
+}
+
 function migrateProduct(product) {
   var images = [];
 
@@ -153,6 +185,9 @@ function migrateProduct(product) {
     image: images[Number(product.cardImageIndex) || 0] || images[0] || "",
     reviews: product.reviews || "Belum ada ulasan untuk produk ini.",
     comments: Array.isArray(product.comments) ? product.comments : [],
+    isPublished: product.isPublished !== false,
+    createdAt: product.createdAt || new Date().toISOString(),
+    editedAt: product.editedAt || "",
     whatsappUrl: product.whatsappUrl || buildProductWhatsApp(product, "6281234567890"),
     shopeeUrl: product.shopeeUrl || product.shopeeStoreUrl || "https://shopee.co.id/",
     gradient: product.gradient || ["#e7e1d7", "#ffffff"],
@@ -234,7 +269,9 @@ function normalizeStore(store) {
 function saveStore(store, onCloudSuccess, onCloudError) {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
-    saveCloudStore(store, onCloudSuccess, onCloudError);
+    if (!saveCloudStore(store, onCloudSuccess, onCloudError) && typeof onCloudSuccess === "function") {
+      onCloudSuccess();
+    }
     return true;
   } catch (error) {
     return false;
@@ -376,9 +413,12 @@ window.StoreData = {
   cloneDefaultStore: cloneDefaultStore,
   createProductId: createProductId,
   escapeHTML: escapeHTML,
+  getProductStock: getProductStock,
+  isCloudStoreEnabled: isCloudStoreEnabled,
   loadStore: loadStore,
   loadCloudStore: loadCloudStore,
   normalizeSizes: normalizeSizes,
+  parsePrice: parsePrice,
   saveCloudStore: saveCloudStore,
   saveLocalStore: saveLocalStore,
   saveStore: saveStore,

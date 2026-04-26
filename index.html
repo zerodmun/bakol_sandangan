@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Threadline Studio - Kaos Daily Wear</title>
-    <link rel="stylesheet" href="style.css?v=36" />
+    <link rel="stylesheet" href="style.css?v=40" />
   </head>
   <body>
     <header class="site-header">
@@ -55,6 +55,11 @@
           </div>
         </div>
       </section>
+
+      <section class="promo-strip" id="promo-strip">
+        <strong>Info toko</strong>
+        <span data-store="promoText">Gratis konsultasi ukuran sebelum checkout.</span>
+      </section>
 <!--
       <section class="stats" aria-label="Ringkasan toko">
         <article>
@@ -83,6 +88,22 @@
           <button class="filter-btn" type="button" data-filter="basic">Basic</button>
           <button class="filter-btn" type="button" data-filter="earth">Earth Tone</button>
           <button class="filter-btn" type="button" data-filter="limited">Limited</button>
+        </div>
+
+        <div class="catalog-controls">
+          <label>
+            <span>Cari produk</span>
+            <input type="search" id="catalog-search" placeholder="Cari nama, warna, harga..." />
+          </label>
+          <label>
+            <span>Urutkan</span>
+            <select id="catalog-sort">
+              <option value="latest">Terbaru</option>
+              <option value="price-low">Harga terendah</option>
+              <option value="price-high">Harga tertinggi</option>
+              <option value="stock">Stok terbanyak</option>
+            </select>
+          </label>
         </div>
 
         <div class="product-grid" id="product-grid"></div>
@@ -127,6 +148,7 @@
           <div class="detail-actions">
             <a class="btn btn-primary" id="detail-whatsapp" href="#" target="_blank" rel="noreferrer">Pesan via WhatsApp</a>
             <a class="btn btn-secondary" id="detail-shopee" href="#" target="_blank" rel="noreferrer">Pesan via Shopee</a>
+            <button class="btn btn-secondary" type="button" id="share-product">Bagikan</button>
           </div>
         </div>
       </section>
@@ -164,6 +186,16 @@
         </div>
         <a class="btn btn-primary" href="#produk">Lihat Katalog</a>
       </section>
+
+      <section class="order-guide">
+        <div>
+          <p class="eyebrow">Panduan</p>
+          <h2 data-store="faqTitle">Cara order</h2>
+        </div>
+        <p data-store="faqText">
+          Pilih produk, cek ukuran, lalu pesan lewat WhatsApp atau Shopee. Tim kami akan bantu konfirmasi stok dan estimasi pengiriman.
+        </p>
+      </section>
     </main>
 
     <footer class="footer">
@@ -171,7 +203,7 @@
     </footer>
 
     <script src="cloud-config.js?v=2"></script>
-    <script src="store.js?v=36"></script>
-    <script src="script.js?v=36"></script>
+    <script src="store.js?v=39"></script>
+    <script src="script.js?v=39"></script>
   </body>
 </html>

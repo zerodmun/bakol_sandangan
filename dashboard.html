@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Toko</title>
-    <link rel="stylesheet" href="style.css?v=36" />
-    <link rel="stylesheet" href="dashboard.css?v=31" />
+    <link rel="stylesheet" href="style.css?v=40" />
+    <link rel="stylesheet" href="dashboard.css?v=40" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -74,6 +74,11 @@
             tersinkron antar device saat website sudah online.
           </p>
         </div>
+        <div class="sync-status" id="sync-status" role="status" aria-live="polite">
+          <span class="sync-dot"></span>
+          <strong>Memuat data</strong>
+          <small>Menyiapkan dashboard</small>
+        </div>
       </section>
 
       <section class="tab-panel is-active" id="profile-panel">
@@ -141,6 +146,26 @@
           <label>
             Deskripsi katalog
             <textarea name="catalogText" rows="3" required></textarea>
+          </label>
+          <label>
+            Nomor WhatsApp utama
+            <input type="tel" name="phoneNumber" placeholder="6281234567890" required />
+          </label>
+          <label>
+            Banner promo
+            <textarea name="promoText" rows="2" required></textarea>
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" name="promoEnabled" />
+            <span>Tampilkan banner promo</span>
+          </label>
+          <label>
+            Judul cara order
+            <input type="text" name="faqTitle" required />
+          </label>
+          <label class="span-full">
+            Deskripsi cara order
+            <textarea name="faqText" rows="3" required></textarea>
           </label>
 
           <div class="form-actions span-full">
@@ -223,6 +248,10 @@
               Deskripsi
               <textarea name="description" rows="3" required></textarea>
             </label>
+            <label class="toggle-field">
+              <input type="checkbox" name="isPublished" />
+              <span>Tampilkan produk di website</span>
+            </label>
             <div class="product-image-editor">
               <div class="image-list" id="product-image-list"></div>
               <button class="btn btn-secondary" type="button" id="add-product-image">Tambah Gambar</button>
@@ -267,7 +296,7 @@
     </main>
 
     <script src="cloud-config.js?v=2"></script>
-    <script src="store.js?v=32"></script>
-    <script src="dashboard.js?v=33"></script>
+    <script src="store.js?v=39"></script>
+    <script src="dashboard.js?v=39"></script>
   </body>
 </html>

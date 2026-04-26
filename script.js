@@ -7,6 +7,9 @@
     var siteToast = document.getElementById("site-toast");
     var activeCategory = "all";
     var productGrid = document.getElementById("product-grid");
+    var catalogSearch = document.getElementById("catalog-search");
+    var catalogSort = document.getElementById("catalog-sort");
+    var promoStrip = document.getElementById("promo-strip");
     var filterButtons = document.querySelectorAll(".filter-btn");
     var navToggle = document.querySelector(".nav-toggle");
     var navLinks = document.getElementById("nav-links");
@@ -28,16 +31,20 @@
     var commentToggle = document.getElementById("comment-toggle");
     var detailWhatsapp = document.getElementById("detail-whatsapp");
     var detailShopee = document.getElementById("detail-shopee");
+    var shareProduct = document.getElementById("share-product");
     var prevImage = document.getElementById("prev-image");
     var nextImage = document.getElementById("next-image");
     var selectedProduct = null;
     var selectedImageIndex = 0;
     var showAllComments = false;
+    var catalogKeyword = "";
+    var sortMode = "latest";
     var index;
 
     storeTools.saveLocalStore(store);
     applyProfile();
     renderProducts(activeCategory);
+    openProductFromUrl();
     loadLatestStore();
 
     window.addEventListener("storage", function () {
@@ -60,6 +67,16 @@
         renderProducts(this.getAttribute("data-filter"));
       });
     }
+
+    catalogSearch.addEventListener("input", function () {
+      catalogKeyword = catalogSearch.value.trim().toLowerCase();
+      renderProducts(activeCategory);
+    });
+
+    catalogSort.addEventListener("change", function () {
+      sortMode = catalogSort.value;
+      renderProducts(activeCategory);
+    });
 
     navToggle.addEventListener("click", function () {
       var isOpen = navLinks.classList.toggle("is-open");
@@ -160,22 +177,26 @@
       renderComments(selectedProduct);
     });
 
+    shareProduct.addEventListener("click", function () {
+      shareSelectedProduct();
+    });
+
     function getGradient(product) {
       return product.gradient || ["#e7e1d7", "#ffffff"];
     }
 
     function refreshStore() {
-      var previousCount = store.products.length;
       store = storeTools.loadStore();
       applyProfile();
       renderProducts(activeCategory);
+      openProductFromUrl();
 
       if (selectedProduct) {
         selectedProduct = getProductById(selectedProduct.id);
 
-        if (selectedProduct) {
+        if (selectedProduct && selectedProduct.isPublished !== false) {
           showProductDetail(selectedProduct);
-        } else if (previousCount !== store.products.length) {
+        } else {
           closeProductDetail();
         }
       }
@@ -190,11 +211,12 @@
         store = remoteStore;
         applyProfile();
         renderProducts(activeCategory);
+        openProductFromUrl();
 
         if (selectedProduct) {
           selectedProduct = getProductById(selectedProduct.id);
 
-          if (selectedProduct) {
+          if (selectedProduct && selectedProduct.isPublished !== false) {
             showProductDetail(selectedProduct);
           } else {
             closeProductDetail();
@@ -274,6 +296,7 @@
       brandName.textContent = store.profile.name;
       heroImage.src = store.profile.heroImage || "assets/kaos-collection.png";
       heroImage.alt = "Gambar utama " + store.profile.name;
+      promoStrip.classList.toggle("is-hidden", store.profile.promoEnabled === false);
 
       for (elementIndex = 0; elementIndex < storeElements.length; elementIndex += 1) {
         key = storeElements[elementIndex].getAttribute("data-store");
@@ -305,10 +328,16 @@
       for (productIndex = 0; productIndex < store.products.length; productIndex += 1) {
         product = store.products[productIndex];
 
-        if (activeCategory === "all" || product.category === activeCategory) {
+        if (product.isPublished === false) {
+          continue;
+        }
+
+        if ((activeCategory === "all" || product.category === activeCategory) && matchesCatalogSearch(product)) {
           visibleProducts.push(product);
         }
       }
+
+      sortProducts(visibleProducts);
 
       if (!visibleProducts.length) {
         productGrid.innerHTML =
@@ -321,7 +350,9 @@
         gradient = getGradient(product);
 
         html +=
-          '<article class="product-card">' +
+          '<article class="product-card" id="product-' +
+          storeTools.escapeHTML(product.id) +
+          '">' +
           '<div class="product-visual" style="--card-a: ' +
           storeTools.escapeHTML(gradient[0]) +
           "; --card-b: " +
@@ -357,7 +388,45 @@
       productGrid.innerHTML = html;
     }
 
+    function matchesCatalogSearch(product) {
+      var haystack;
+
+      if (!catalogKeyword) {
+        return true;
+      }
+
+      haystack = [
+        product.name,
+        product.price,
+        product.category,
+        product.status,
+        product.description,
+      ].join(" ").toLowerCase();
+
+      return haystack.indexOf(catalogKeyword) !== -1;
+    }
+
+    function sortProducts(products) {
+      products.sort(function (firstProduct, secondProduct) {
+        if (sortMode === "price-low") {
+          return storeTools.parsePrice(firstProduct.price) - storeTools.parsePrice(secondProduct.price);
+        }
+
+        if (sortMode === "price-high") {
+          return storeTools.parsePrice(secondProduct.price) - storeTools.parsePrice(firstProduct.price);
+        }
+
+        if (sortMode === "stock") {
+          return storeTools.getProductStock(secondProduct) - storeTools.getProductStock(firstProduct);
+        }
+
+        return new Date(secondProduct.createdAt || 0).getTime() - new Date(firstProduct.createdAt || 0).getTime();
+      });
+    }
+
     function showProductDetail(product) {
+      var detailUrl = new URL(window.location.href);
+
       selectedProduct = product;
       selectedImageIndex = 0;
       showAllComments = false;
@@ -368,7 +437,7 @@
       detailStatus.className = "status-badge " + (product.status || "ready");
       renderDetailSizes(product);
       detailDescription.textContent = product.description;
-      detailWhatsapp.href = product.whatsappUrl;
+      detailWhatsapp.href = product.whatsappUrl || storeTools.buildProductWhatsApp(product, store.profile.phoneNumber);
       detailShopee.href = product.shopeeUrl;
       detailWhatsapp.classList.toggle("is-disabled", product.status === "soldout");
       detailShopee.classList.toggle("is-disabled", product.status === "soldout");
@@ -380,6 +449,8 @@
       renderComments(product);
       detailSection.classList.remove("is-hidden");
       document.body.style.overflow = "hidden";
+      detailUrl.searchParams.set("product", product.id);
+      window.history.replaceState(null, "", detailUrl.toString());
     }
 
     function renderComments(product) {
@@ -463,8 +534,55 @@
     }
 
     function closeProductDetail() {
+      var detailUrl = new URL(window.location.href);
+
       detailSection.classList.add("is-hidden");
       document.body.style.overflow = "";
+      selectedProduct = null;
+      selectedImageIndex = 0;
+      showAllComments = false;
+      detailUrl.searchParams.delete("product");
+      window.history.replaceState(null, "", detailUrl.toString());
+    }
+
+    function shareSelectedProduct() {
+      var shareData;
+
+      if (!selectedProduct) {
+        return;
+      }
+
+      shareData = {
+        title: selectedProduct.name,
+        text: selectedProduct.name + " - " + selectedProduct.price,
+        url: window.location.href,
+      };
+
+      if (navigator.share) {
+        navigator.share(shareData).catch(function () {});
+        return;
+      }
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href);
+        showSiteToast("Link produk disalin.");
+      }
+    }
+
+    function openProductFromUrl() {
+      var params = new URLSearchParams(window.location.search);
+      var productId = params.get("product");
+      var product;
+
+      if (!productId || selectedProduct) {
+        return;
+      }
+
+      product = getProductById(productId);
+
+      if (product && product.isPublished !== false) {
+        showProductDetail(product);
+      }
     }
 
     function renderDetailImage() {

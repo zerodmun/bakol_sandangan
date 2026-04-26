@@ -19,6 +19,7 @@
     var toastContainer = document.getElementById("toast-container");
     var dashboardHeader = document.getElementById("dashboard-header");
     var dashboardApp = document.getElementById("dashboard-app");
+    var syncStatus = document.getElementById("sync-status");
     var ownerMenuButton = document.getElementById("owner-menu-button");
     var ownerMenu = document.getElementById("owner-menu");
     var logoutButton = document.getElementById("logout-button");
@@ -250,6 +251,9 @@
         ["Deskripsi hero", store.profile.description],
         ["Judul katalog", store.profile.catalogTitle],
         ["Deskripsi katalog", store.profile.catalogText],
+        ["WhatsApp utama", store.profile.phoneNumber],
+        ["Banner promo", store.profile.promoEnabled ? store.profile.promoText : "Tidak ditampilkan"],
+        ["Cara order", store.profile.faqTitle],
       ];
       var html = "";
       var index;
@@ -300,11 +304,16 @@
       var key;
 
       for (key in store.profile) {
-        if (Object.prototype.hasOwnProperty.call(store.profile, key) && profileForm.elements[key]) {
+        if (
+          Object.prototype.hasOwnProperty.call(store.profile, key) &&
+          profileForm.elements[key] &&
+          profileForm.elements[key].type !== "checkbox"
+        ) {
           profileForm.elements[key].value = store.profile[key];
         }
       }
 
+      profileForm.elements.promoEnabled.checked = store.profile.promoEnabled !== false;
       pendingLogo = store.profile.logo || "";
       pendingHeroImage = store.profile.heroImage || "assets/kaos-collection.png";
       updateLogoPreview();
@@ -317,12 +326,13 @@
       productForm.elements.id.value = "";
       productForm.elements.category.value = "basic";
       productForm.elements.status.value = "ready";
+      productForm.elements.isPublished.checked = true;
       fillSizeInputs({ S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
       productForm.elements.shirt.value = "#171717";
       productForm.elements.text.value = "#ffffff";
       productForm.elements.whatsappUrl.value = storeTools.buildProductWhatsApp(
         { name: "Nama Produk", price: "Rp0" },
-        "6281234567890"
+        store.profile.phoneNumber
       );
       productForm.elements.shopeeUrl.value = "https://shopee.co.id/";
       renderProductImageInputs();
@@ -489,6 +499,7 @@
           " / " +
           storeTools.escapeHTML(getSizeSummary(product)) +
           "</span>" +
+          (product.isPublished === false ? '<em class="draft-label">Draft</em>' : "") +
           (product.id === recentlyEditedProductId ? '<em class="recent-label">Baru diedit</em>' : "") +
           (product.id === editingProductId ? '<em class="editing-label">Sedang diedit</em>' : "") +
           (product.editedAt ? '<em class="time-label">Diedit ' + storeTools.escapeHTML(product.editedAt) + '</em>' : "") +
@@ -529,7 +540,7 @@
         return true;
       }
 
-        haystack = [
+      haystack = [
         product.name,
         product.price,
         product.category,
@@ -589,13 +600,12 @@
     }
 
     function getSizeSummary(product) {
-      var sizes = getProductSizes(product);
-      var labels = ["S", "M", "L", "XL", "XXL"];
-      var total = 0;
-      var index;
+      var total;
 
-      for (index = 0; index < labels.length; index += 1) {
-        total += Number(sizes[labels[index]]) || 0;
+      if (storeTools.getProductStock) {
+        total = storeTools.getProductStock(product);
+      } else {
+        total = 0;
       }
 
       return "Stok " + total + " pcs";
@@ -623,24 +633,57 @@
 
     function syncDashboard(shouldSave) {
       if (shouldSave !== false) {
+        updateSyncStatus(
+          "saving",
+          "Menyimpan",
+          storeTools.isCloudStoreEnabled && storeTools.isCloudStoreEnabled()
+            ? "Mengirim perubahan ke cloud"
+            : "Menyimpan ke browser ini"
+        );
         if (
           !storeTools.saveStore(
             store,
-            null,
+            function () {
+              updateSyncStatus(
+                "saved",
+                storeTools.isCloudStoreEnabled && storeTools.isCloudStoreEnabled()
+                  ? "Tersimpan online"
+                  : "Tersimpan lokal",
+                "Baru saja disimpan"
+              );
+            },
             function (error) {
+              updateSyncStatus("error", "Gagal sync", error.message);
               showToast("Data cloud gagal disimpan: " + error.message);
             }
           )
         ) {
+          updateSyncStatus("error", "Gagal lokal", "Browser tidak bisa menyimpan data");
           showToast("Data gagal disimpan. Kurangi ukuran/jumlah gambar produk.");
           return false;
         }
+      } else {
+        updateSyncStatus("idle", "Siap diedit", "Data tampil dari cache/cloud");
       }
 
       updateDashboardBrand();
       renderProfileSummary();
       renderAdminProducts();
       return true;
+    }
+
+    function updateSyncStatus(type, title, detail) {
+      if (!syncStatus) {
+        return;
+      }
+
+      syncStatus.className = "sync-status is-" + type;
+      syncStatus.innerHTML =
+        '<span class="sync-dot"></span><strong>' +
+        storeTools.escapeHTML(title) +
+        "</strong><small>" +
+        storeTools.escapeHTML(detail) +
+        "</small>";
     }
 
     function loadLatestStore() {
@@ -652,6 +695,7 @@
         function (remoteStore) {
           if (!remoteStore.products.length && store.products.length) {
             storeTools.saveStore(store, function () {
+              updateSyncStatus("saved", "Tersimpan online", "Data lokal dikirim ke cloud");
               showToast("Data lokal dikirim ke cloud.");
             });
             return;
@@ -664,9 +708,11 @@
           resetProductForm();
           hideProductForm();
           syncDashboard(false);
+          updateSyncStatus("saved", "Data cloud aktif", "Sinkron antar device");
           showToast("Data cloud berhasil dimuat.");
         },
         function (error) {
+          updateSyncStatus("error", "Cloud belum terbaca", error.message);
           showToast("Data cloud belum bisa dimuat: " + error.message);
         }
       );
@@ -833,6 +879,11 @@
         store.profile.description = String(formData.get("description") || "").trim();
         store.profile.catalogTitle = String(formData.get("catalogTitle") || "").trim();
         store.profile.catalogText = String(formData.get("catalogText") || "").trim();
+        store.profile.phoneNumber = String(formData.get("phoneNumber") || "").replace(/[^\d]/g, "");
+        store.profile.promoEnabled = formData.get("promoEnabled") === "on";
+        store.profile.promoText = String(formData.get("promoText") || "").trim();
+        store.profile.faqTitle = String(formData.get("faqTitle") || "").trim();
+        store.profile.faqText = String(formData.get("faqText") || "").trim();
 
         if (syncDashboard()) {
           fillProfileForm();
@@ -871,6 +922,7 @@
           price: String(formData.get("price") || "").trim(),
           category: String(formData.get("category") || "basic"),
           status: String(formData.get("status") || "ready"),
+          isPublished: formData.get("isPublished") === "on",
           sizes: collectSizeInputs(formData),
           description: String(formData.get("description") || "").trim(),
           whatsappUrl: String(formData.get("whatsappUrl") || "").trim(),
@@ -886,6 +938,7 @@
             pendingProductImages[0] ||
             "",
           comments: existingProduct && existingProduct.comments ? existingProduct.comments : [],
+          createdAt: existingProduct && existingProduct.createdAt ? existingProduct.createdAt : new Date().toISOString(),
           editedAt: getEditTime(),
           gradient: existingProduct ? existingProduct.gradient : ["#e7e1d7", "#ffffff"],
         };
@@ -939,6 +992,7 @@
           productForm.elements.price.value = product.price;
           productForm.elements.category.value = product.category;
           productForm.elements.status.value = product.status || "ready";
+          productForm.elements.isPublished.checked = product.isPublished !== false;
           fillSizeInputs(product.sizes);
           productForm.elements.description.value = product.description;
           productForm.elements.whatsappUrl.value = product.whatsappUrl;
