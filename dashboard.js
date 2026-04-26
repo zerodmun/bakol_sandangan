@@ -651,6 +651,13 @@
 
       return storeTools.loadCloudStore(
         function (remoteStore) {
+          if (!remoteStore.products.length && store.products.length) {
+            storeTools.saveStore(store, function () {
+              showToast("Data lokal dikirim ke cloud.");
+            });
+            return;
+          }
+
           store = remoteStore;
           pendingLogo = store.profile.logo || "";
           pendingHeroImage = store.profile.heroImage || "assets/kaos-collection.png";
