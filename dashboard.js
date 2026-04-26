@@ -41,7 +41,6 @@
     var addProductButton = document.getElementById("add-product");
     var productSearch = document.getElementById("product-search");
     var cancelEditButton = document.getElementById("cancel-edit");
-    var resetStoreButton = document.getElementById("reset-store");
     var removeLogoButton = document.getElementById("remove-logo");
     var removeHeroImageButton = document.getElementById("remove-hero-image");
     var logoPreview = document.getElementById("logo-preview");
@@ -982,20 +981,6 @@
         renderAdminProducts();
       });
 
-      resetStoreButton.addEventListener("click", function () {
-        var confirmed = confirm("Reset semua data toko ke contoh awal?");
-
-        if (confirmed) {
-          store = storeTools.cloneDefaultStore();
-          fillProfileForm();
-          resetProductForm();
-          hideProductForm();
-          if (syncDashboard()) {
-            showProfileView();
-            setActiveTab("profile");
-          }
-        }
-      });
     }
 
     function getEditTime() {
