@@ -3,7 +3,8 @@
 
   function initWebsite() {
     var storeTools = window.StoreData;
-    var store = storeTools.loadStore();
+    var isPreviewMode = new URL(window.location.href).searchParams.get("preview") === "draft";
+    var store = isPreviewMode ? storeTools.loadStore() : storeTools.loadPublishedStore();
     var siteToast = document.getElementById("site-toast");
     var activeCategory = "all";
     var productGrid = document.getElementById("product-grid");
@@ -41,7 +42,6 @@
     var sortMode = "latest";
     var index;
 
-    storeTools.saveLocalStore(store);
     applyProfile();
     renderProducts(activeCategory);
     openProductFromUrl();
@@ -163,7 +163,11 @@
 
       selectedProduct.comments.unshift(comment);
       updateProductInStore(selectedProduct);
-      storeTools.saveStore(store);
+      if (isPreviewMode) {
+        storeTools.saveStore(store);
+      } else {
+        storeTools.savePublishedStore(store);
+      }
       commentForm.reset();
       updateCommentCounter();
       renderComments(selectedProduct);
@@ -186,7 +190,7 @@
     }
 
     function refreshStore() {
-      store = storeTools.loadStore();
+      store = isPreviewMode ? storeTools.loadStore() : storeTools.loadPublishedStore();
       applyProfile();
       renderProducts(activeCategory);
       openProductFromUrl();
@@ -203,6 +207,10 @@
     }
 
     function loadLatestStore() {
+      if (isPreviewMode) {
+        return false;
+      }
+
       if (!storeTools.loadCloudStore) {
         return false;
       }
@@ -276,7 +284,12 @@
       var brandMark = document.querySelector(".brand-mark");
       var brandName = document.querySelector(".brand span:last-child");
       var heroImage = document.getElementById("hero-image");
+      var heroMedia = document.querySelector(".hero-media");
+      var heroSection = document.querySelector(".hero");
+      var orderGuide = document.querySelector(".order-guide");
       var storeElements = document.querySelectorAll("[data-store]");
+      var visibility = store.profile.profileVisibility || {};
+      var isProfileEnabled = store.profile.profileEnabled !== false;
       var elementIndex;
       var key;
 
@@ -294,13 +307,22 @@
       }
 
       brandName.textContent = store.profile.name;
+      brandMark.classList.toggle("is-hidden", visibility.logo === false);
+      brandName.classList.toggle("is-hidden", visibility.name === false);
       heroImage.src = store.profile.heroImage || "assets/kaos-collection.png";
       heroImage.alt = "Gambar utama " + store.profile.name;
-      promoStrip.classList.toggle("is-hidden", store.profile.promoEnabled === false);
+      heroSection.classList.toggle("is-hidden", !isProfileEnabled);
+      heroMedia.classList.toggle("is-hidden", visibility.heroImage === false);
+      promoStrip.classList.toggle("is-hidden", !isProfileEnabled || store.profile.promoEnabled === false || visibility.promoText === false);
+      orderGuide.classList.toggle("is-hidden", visibility.faqTitle === false && visibility.faqText === false);
 
       for (elementIndex = 0; elementIndex < storeElements.length; elementIndex += 1) {
         key = storeElements[elementIndex].getAttribute("data-store");
         storeElements[elementIndex].textContent = store.profile[key] || "";
+        storeElements[elementIndex].classList.toggle(
+          "is-hidden",
+          isProfileEnabled && visibility[key] === false
+        );
       }
     }
 

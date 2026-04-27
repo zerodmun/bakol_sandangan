@@ -20,6 +20,8 @@
     var dashboardHeader = document.getElementById("dashboard-header");
     var dashboardApp = document.getElementById("dashboard-app");
     var syncStatus = document.getElementById("sync-status");
+    var previewSiteButton = document.getElementById("preview-site");
+    var publishSiteButton = document.getElementById("publish-site");
     var ownerMenuButton = document.getElementById("owner-menu-button");
     var ownerMenu = document.getElementById("owner-menu");
     var logoutButton = document.getElementById("logout-button");
@@ -64,6 +66,9 @@
 
     storeTools = window.StoreData;
     store = storeTools.loadStore();
+    if (storeTools.ensurePublishedStore) {
+      storeTools.ensurePublishedStore(store);
+    }
     pendingLogo = store.profile.logo || "";
     pendingHeroImage = store.profile.heroImage || "assets/kaos-collection.png";
 
@@ -242,8 +247,9 @@
       var logoValue = store.profile.logo ? "Logo custom aktif" : "Inisial " + store.profile.initials;
       var heroImageValue = store.profile.heroImage && store.profile.heroImage !== "assets/kaos-collection.png" ? "Gambar utama custom aktif" : "Gambar default";
       var items = [
+        ["Profile website", store.profile.profileEnabled === false ? "Dimatikan, website mulai dari katalog" : "Aktif", store.profile.profileEnabled !== false],
         ["Nama toko", store.profile.name],
-        ["Judul website", store.profile.title],
+        ["Judul website", store.profile.title, true],
         ["Logo", logoValue],
         ["Gambar halaman utama", heroImageValue],
         ["Eyebrow hero", store.profile.eyebrow],
@@ -252,13 +258,15 @@
         ["Judul katalog", store.profile.catalogTitle],
         ["Deskripsi katalog", store.profile.catalogText],
         ["WhatsApp utama", store.profile.phoneNumber],
-        ["Banner promo", store.profile.promoEnabled ? store.profile.promoText : "Tidak ditampilkan"],
+        ["Banner promo", store.profile.promoEnabled ? store.profile.promoText : "Tidak ditampilkan", store.profile.promoEnabled],
         ["Cara order", store.profile.faqTitle],
       ];
       var html = "";
       var index;
+      var status;
 
       for (index = 0; index < items.length; index += 1) {
+        status = items[index].length > 2 ? (items[index][2] ? "Aktif" : "Off") : "";
         html +=
           '<article class="summary-item">' +
           "<span>" +
@@ -267,6 +275,7 @@
           "<strong>" +
           storeTools.escapeHTML(items[index][1]) +
           "</strong>" +
+          (status ? "<em>" + storeTools.escapeHTML(status) + "</em>" : "") +
           "</article>";
       }
 
@@ -314,6 +323,7 @@
       }
 
       profileForm.elements.promoEnabled.checked = store.profile.promoEnabled !== false;
+      profileForm.elements.profileEnabled.checked = store.profile.profileEnabled !== false;
       pendingLogo = store.profile.logo || "";
       pendingHeroImage = store.profile.heroImage || "assets/kaos-collection.png";
       updateLogoPreview();
@@ -635,10 +645,8 @@
       if (shouldSave !== false) {
         updateSyncStatus(
           "saving",
-          "Menyimpan",
-          storeTools.isCloudStoreEnabled && storeTools.isCloudStoreEnabled()
-            ? "Mengirim perubahan ke cloud"
-            : "Menyimpan ke browser ini"
+          "Menyimpan draft",
+          "Perubahan belum tampil di website pembeli"
         );
         if (
           !storeTools.saveStore(
@@ -646,10 +654,8 @@
             function () {
               updateSyncStatus(
                 "saved",
-                storeTools.isCloudStoreEnabled && storeTools.isCloudStoreEnabled()
-                  ? "Tersimpan online"
-                  : "Tersimpan lokal",
-                "Baru saja disimpan"
+                "Draft tersimpan",
+                "Klik Publish saat siap ditampilkan"
               );
             },
             function (error) {
@@ -663,12 +669,53 @@
           return false;
         }
       } else {
-        updateSyncStatus("idle", "Siap diedit", "Data tampil dari cache/cloud");
+        updateSyncStatus("idle", "Siap diedit", "Mode draft aktif");
       }
 
       updateDashboardBrand();
       renderProfileSummary();
       renderAdminProducts();
+      return true;
+    }
+
+    function publishDashboard() {
+      if (!profileForm.classList.contains("is-hidden") || !productForm.classList.contains("is-hidden")) {
+        showToast("Simpan atau batalkan form dulu sebelum Publish.");
+        return false;
+      }
+
+      updateSyncStatus(
+        "saving",
+        "Publish",
+        storeTools.isCloudStoreEnabled && storeTools.isCloudStoreEnabled()
+          ? "Mengirim data ke website online"
+          : "Menampilkan data di browser ini"
+      );
+
+      if (
+        !storeTools.savePublishedStore(
+          store,
+          function () {
+            updateSyncStatus(
+              "saved",
+              storeTools.isCloudStoreEnabled && storeTools.isCloudStoreEnabled()
+                ? "Published online"
+                : "Published lokal",
+              "Website pembeli sudah memakai data ini"
+            );
+            showToast("Website berhasil dipublish.");
+          },
+          function (error) {
+            updateSyncStatus("error", "Publish gagal", error.message);
+            showToast("Publish cloud gagal: " + error.message);
+          }
+        )
+      ) {
+        updateSyncStatus("error", "Publish gagal", "Browser tidak bisa menyimpan data");
+        showToast("Publish gagal. Kurangi ukuran/jumlah gambar produk.");
+        return false;
+      }
+
       return true;
     }
 
@@ -691,25 +738,31 @@
         return false;
       }
 
+      if (storeTools.hasDraftStore && storeTools.hasDraftStore()) {
+        updateSyncStatus("idle", "Draft lokal aktif", "Klik Publish untuk menampilkan");
+        return false;
+      }
+
       return storeTools.loadCloudStore(
         function (remoteStore) {
           if (!remoteStore.products.length && store.products.length) {
             storeTools.saveStore(store, function () {
-              updateSyncStatus("saved", "Tersimpan online", "Data lokal dikirim ke cloud");
-              showToast("Data lokal dikirim ke cloud.");
+              updateSyncStatus("saved", "Draft dibuat", "Klik Publish untuk menampilkan");
+              showToast("Draft siap dipublish.");
             });
             return;
           }
 
           store = remoteStore;
+          storeTools.saveStore(store);
           pendingLogo = store.profile.logo || "";
           pendingHeroImage = store.profile.heroImage || "assets/kaos-collection.png";
           fillProfileForm();
           resetProductForm();
           hideProductForm();
           syncDashboard(false);
-          updateSyncStatus("saved", "Data cloud aktif", "Sinkron antar device");
-          showToast("Data cloud berhasil dimuat.");
+          updateSyncStatus("saved", "Draft dari cloud", "Klik Publish jika ada perubahan");
+          showToast("Data cloud dimuat sebagai draft.");
         },
         function (error) {
           updateSyncStatus("error", "Cloud belum terbaca", error.message);
@@ -744,6 +797,14 @@
 
     function bindDashboardEvents() {
       var index;
+
+      previewSiteButton.addEventListener("click", function () {
+        window.open("index.html?preview=draft", "_blank");
+      });
+
+      publishSiteButton.addEventListener("click", function () {
+        publishDashboard();
+      });
 
       ownerMenuButton.addEventListener("click", function () {
         var isOpen = ownerMenu.classList.toggle("is-hidden") === false;
@@ -884,6 +945,7 @@
         store.profile.promoText = String(formData.get("promoText") || "").trim();
         store.profile.faqTitle = String(formData.get("faqTitle") || "").trim();
         store.profile.faqText = String(formData.get("faqText") || "").trim();
+        store.profile.profileEnabled = formData.get("profileEnabled") === "on";
 
         if (syncDashboard()) {
           fillProfileForm();

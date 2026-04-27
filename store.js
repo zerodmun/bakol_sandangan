@@ -1,4 +1,5 @@
 var STORE_KEY = "threadline-store-dashboard";
+var PUBLISHED_STORE_KEY = "threadline-store-published";
 
 var defaultStore = {
   profile: {
@@ -18,6 +19,20 @@ var defaultStore = {
     promoText: "Gratis konsultasi ukuran sebelum checkout.",
     faqTitle: "Cara order",
     faqText: "Pilih produk, cek ukuran, lalu pesan lewat WhatsApp atau Shopee. Tim kami akan bantu konfirmasi stok dan estimasi pengiriman.",
+    profileEnabled: true,
+    profileVisibility: {
+      logo: true,
+      heroImage: true,
+      name: true,
+      eyebrow: true,
+      headline: true,
+      description: true,
+      catalogTitle: true,
+      catalogText: true,
+      promoText: true,
+      faqTitle: true,
+      faqText: true,
+    },
   },
   products: [
     {
@@ -197,6 +212,7 @@ function migrateProduct(product) {
 function mergeProfile(savedProfile) {
   var mergedProfile = {};
   var key;
+  var visibilityKey;
 
   for (key in defaultStore.profile) {
     if (Object.prototype.hasOwnProperty.call(defaultStore.profile, key)) {
@@ -208,6 +224,22 @@ function mergeProfile(savedProfile) {
     for (key in savedProfile) {
       if (Object.prototype.hasOwnProperty.call(savedProfile, key)) {
         mergedProfile[key] = savedProfile[key];
+      }
+    }
+  }
+
+  mergedProfile.profileVisibility = {};
+
+  for (visibilityKey in defaultStore.profile.profileVisibility) {
+    if (Object.prototype.hasOwnProperty.call(defaultStore.profile.profileVisibility, visibilityKey)) {
+      mergedProfile.profileVisibility[visibilityKey] = defaultStore.profile.profileVisibility[visibilityKey];
+    }
+  }
+
+  if (savedProfile && savedProfile.profileVisibility) {
+    for (visibilityKey in savedProfile.profileVisibility) {
+      if (Object.prototype.hasOwnProperty.call(savedProfile.profileVisibility, visibilityKey)) {
+        mergedProfile.profileVisibility[visibilityKey] = savedProfile.profileVisibility[visibilityKey] !== false;
       }
     }
   }
@@ -245,6 +277,63 @@ function loadStore() {
   }
 }
 
+function loadPublishedStore() {
+  var savedStore;
+  var draftStore;
+  var parsedStore;
+  var products;
+
+  try {
+    savedStore = localStorage.getItem(PUBLISHED_STORE_KEY);
+    draftStore = localStorage.getItem(STORE_KEY);
+
+    if (!savedStore && draftStore) {
+      localStorage.setItem(PUBLISHED_STORE_KEY, draftStore);
+      savedStore = draftStore;
+    }
+  } catch (error) {
+    return cloneDefaultStore();
+  }
+
+  if (!savedStore) {
+    return cloneDefaultStore();
+  }
+
+  try {
+    parsedStore = JSON.parse(savedStore);
+    products = Array.isArray(parsedStore.products)
+      ? parsedStore.products.map(migrateProduct)
+      : cloneDefaultStore().products;
+
+    return {
+      profile: mergeProfile(parsedStore.profile),
+      products: products,
+    };
+  } catch (error) {
+    return cloneDefaultStore();
+  }
+}
+
+function hasDraftStore() {
+  try {
+    return Boolean(localStorage.getItem(STORE_KEY));
+  } catch (error) {
+    return false;
+  }
+}
+
+function ensurePublishedStore(store) {
+  try {
+    if (!localStorage.getItem(PUBLISHED_STORE_KEY)) {
+      localStorage.setItem(PUBLISHED_STORE_KEY, JSON.stringify(normalizeStore(store)));
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 function getCloudConfig() {
   return window.StoreCloudConfig || {};
 }
@@ -269,7 +358,7 @@ function normalizeStore(store) {
 function saveStore(store, onCloudSuccess, onCloudError) {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
-    if (!saveCloudStore(store, onCloudSuccess, onCloudError) && typeof onCloudSuccess === "function") {
+    if (typeof onCloudSuccess === "function") {
       onCloudSuccess();
     }
     return true;
@@ -285,6 +374,27 @@ function saveLocalStore(store) {
   } catch (error) {
     return false;
   }
+}
+
+function savePublishedLocalStore(store) {
+  try {
+    localStorage.setItem(PUBLISHED_STORE_KEY, JSON.stringify(normalizeStore(store)));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function savePublishedStore(store, onCloudSuccess, onCloudError) {
+  if (!savePublishedLocalStore(store)) {
+    return false;
+  }
+
+  if (!saveCloudStore(store, onCloudSuccess, onCloudError) && typeof onCloudSuccess === "function") {
+    onCloudSuccess();
+  }
+
+  return true;
 }
 
 function getSupabaseHeaders(config) {
@@ -345,7 +455,7 @@ function loadCloudStore(onSuccess, onError) {
       }
 
       remoteStore = normalizeStore(remoteStore);
-      saveLocalStore(remoteStore);
+      savePublishedLocalStore(remoteStore);
 
       if (typeof onSuccess === "function") {
         onSuccess(remoteStore);
@@ -413,13 +523,17 @@ window.StoreData = {
   cloneDefaultStore: cloneDefaultStore,
   createProductId: createProductId,
   escapeHTML: escapeHTML,
+  ensurePublishedStore: ensurePublishedStore,
   getProductStock: getProductStock,
   isCloudStoreEnabled: isCloudStoreEnabled,
+  hasDraftStore: hasDraftStore,
+  loadPublishedStore: loadPublishedStore,
   loadStore: loadStore,
   loadCloudStore: loadCloudStore,
   normalizeSizes: normalizeSizes,
   parsePrice: parsePrice,
   saveCloudStore: saveCloudStore,
   saveLocalStore: saveLocalStore,
+  savePublishedStore: savePublishedStore,
   saveStore: saveStore,
 };

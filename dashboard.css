@@ -45,6 +45,13 @@
   background: #9b2f1d;
 }
 
+.dashboard-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .is-hidden {
   display: none !important;
 }
@@ -386,6 +393,17 @@
   overflow-wrap: anywhere;
 }
 
+.summary-item em {
+  width: max-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: #eee6dc;
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
 .admin-panel {
   display: grid;
   gap: 14px;
@@ -460,6 +478,61 @@
   font-weight: 800;
 }
 
+.profile-visibility-editor .toggle-field {
+  grid-column: 1 / -1;
+}
+
+.profile-visibility-editor .toggle-field input {
+  position: relative;
+  width: 44px !important;
+  height: 24px;
+  flex: 0 0 44px;
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+  background: #d7d0c7;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.profile-visibility-editor .toggle-field input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(28, 27, 25, 0.22);
+  transition: transform 0.18s ease;
+}
+
+.profile-visibility-editor .toggle-field input:checked {
+  background: var(--accent);
+}
+
+.profile-visibility-editor .toggle-field input:checked::before {
+  transform: translateX(20px);
+}
+
+.profile-visibility-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f4efe7;
+}
+
+.profile-visibility-editor legend {
+  padding: 0 8px;
+  color: var(--ink);
+  font-weight: 900;
+}
+
 .profile-form,
 .product-form {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -468,6 +541,7 @@
 .profile-form .panel-title,
 .profile-form .logo-editor,
 .profile-form .hero-image-editor,
+.profile-form .profile-visibility-editor,
 .profile-form label:nth-of-type(5),
 .profile-form label:nth-of-type(7),
 .profile-form .toggle-field,
@@ -868,6 +942,10 @@
     flex-direction: column;
   }
 
+  .dashboard-actions {
+    justify-content: flex-start;
+  }
+
   .product-toolbar-actions {
     width: 100%;
     flex-direction: column;
@@ -924,6 +1002,7 @@
   .product-form,
   .logo-editor,
   .hero-image-editor,
+  .profile-visibility-editor,
   .product-image-editor,
   .size-stock-editor,
   .summary-grid {
@@ -936,6 +1015,7 @@
   }
 
   .dashboard-hero .btn,
+  .dashboard-actions .btn,
   .product-toolbar .btn,
   .form-actions .btn,
   .logo-editor .btn,
@@ -969,6 +1049,7 @@
   }
 
   .dashboard-hero .btn,
+  .dashboard-actions .btn,
   .product-toolbar .btn,
   .form-actions .btn,
   .logo-editor .btn,

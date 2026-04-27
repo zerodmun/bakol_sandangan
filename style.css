@@ -36,6 +36,10 @@ a {
   text-decoration: none;
 }
 
+.is-hidden {
+  display: none !important;
+}
+
 .site-toast {
   position: fixed;
   left: 50%;
